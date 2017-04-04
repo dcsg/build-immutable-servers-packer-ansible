@@ -1,0 +1,71 @@
+{
+  "variables": {
+    "docker_hub_user": "{{env `DOCKER_HUB_USER`}}",
+    "docker_hub_password": "{{env `DOCKER_HUB_PASSWORD`}}"
+  },
+  "builders": [
+    {
+      "type": "docker",
+      "image": "ansible/ubuntu14.04-ansible",
+      "export_path": "out/my-app.tar",
+      "author": "danielcesargomes@gmail.com",
+      "message": "my-app {{timestamp}}",
+      "changes": [
+        "WORKDIR /var/www/app",
+        "EXPOSE 4567 4567",
+        "MAINTAINER Daniel Gomes"
+      ]
+    },
+    {
+      "type": "virtualbox-ovf",
+      "source_path": "vagrant-base-box/box.ovf",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "vm_name": "my-app-{{timestamp}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell-local",
+      "command": "mkdir -p toupload; tar cf toupload/site.tar ./../../config.ru ./../../app ./../../Gemfile ./../../Gemfile.lock"
+    },
+    {
+      "type": "file",
+      "destination": "/tmp/",
+      "source": "./toupload"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo mkdir -p /var/www/app/ && sudo chmod 0755 /var/www/app && cd /tmp && tar xf toupload/site.tar -C /var/www/app/",
+        "rm toupload/site.tar"
+      ]
+    },
+    {
+      "type": "ansible",
+      "playbook_file": "ansible/site.yml"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "output": "out/my-app.box",
+      "only": ["virtualbox-ovf"]
+    },
+    [
+      {
+        "type": "docker-import",
+        "repository": "dcsg/my-app",
+        "tag": "0.1",
+        "only": ["docker"]
+      },
+      {
+        "type": "docker-push",
+        "login": true,
+        "login_username": "{{user `docker_hub_user`}}",
+        "login_password": "{{user `docker_hub_password`}}",
+        "only": ["docker"]
+      }
+    ]
+  ]
+}
