@@ -6,28 +6,23 @@
   "builders": [
     {
       "type": "docker",
-      "image": "ansible/ubuntu14.04-ansible",
-      "export_path": "out/my-app.tar",
+      "image": "dcsg/pixels-base:0.1",
+      "export_path": "out/pixels-app.tar",
       "author": "danielcesargomes@gmail.com",
-      "message": "my-app {{timestamp}}",
+      "message": "pixels-app {{timestamp}}",
       "changes": [
-        "WORKDIR /var/www/app",
-        "EXPOSE 4567 4567",
-        "MAINTAINER Daniel Gomes"
+        "WORKDIR /app",
+        "EXPOSE 9292 9292",
+        "MAINTAINER Daniel Gomes",
+        "PATH=/root/.gem/ruby/2.4.0/bin:$PATH",
+        "CMD [\"bundle\", \"exec\", \"rackup\"]"
       ]
-    },
-    {
-      "type": "virtualbox-ovf",
-      "source_path": "vagrant-base-box/box.ovf",
-      "ssh_username": "vagrant",
-      "ssh_password": "vagrant",
-      "vm_name": "my-app-{{timestamp}}"
     }
   ],
   "provisioners": [
     {
       "type": "shell-local",
-      "command": "mkdir -p toupload; tar cf toupload/site.tar ./../../config.ru ./../../app ./../../Gemfile ./../../Gemfile.lock"
+      "command": "mkdir -p toupload; tar cf toupload/app.tar ./../../config.ru ./../../app ./../../Gemfile ./../../Gemfile.lock"
     },
     {
       "type": "file",
@@ -37,34 +32,31 @@
     {
       "type": "shell",
       "inline": [
-        "sudo mkdir -p /var/www/app/ && sudo chmod 0755 /var/www/app && cd /tmp && tar xf toupload/site.tar -C /var/www/app/",
-        "rm toupload/site.tar"
+        "sudo mkdir -p /app/ && sudo chmod 0755 /app && cd /tmp && tar xf toupload/app.tar -C /app/",
+        "rm toupload/app.tar"
       ]
     },
     {
       "type": "ansible",
-      "playbook_file": "ansible/site.yml"
+      "playbook_file": "ansible/app.yml"
     }
   ],
   "post-processors": [
-    {
-      "type": "vagrant",
-      "output": "out/my-app.box",
-      "only": ["virtualbox-ovf"]
-    },
     [
       {
         "type": "docker-import",
-        "repository": "dcsg/my-app",
-        "tag": "0.1",
-        "only": ["docker"]
+        "repository": "dcsg/pixels-app"
+      },
+      {
+        "type": "docker-tag",
+        "repository": "dcsg/pixels-app",
+        "tag": "0.1"
       },
       {
         "type": "docker-push",
         "login": true,
         "login_username": "{{user `docker_hub_user`}}",
-        "login_password": "{{user `docker_hub_password`}}",
-        "only": ["docker"]
+        "login_password": "{{user `docker_hub_password`}}"
       }
     ]
   ]

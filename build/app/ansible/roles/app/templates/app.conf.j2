@@ -1,4 +1,0 @@
-description "run app when network ready"
-start on static-network-up
-respawn
-exec ruby /var/www/app/app.rb -s Puma

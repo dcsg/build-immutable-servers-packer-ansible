@@ -16,3 +16,17 @@
   gem:
     name: bundler
     state: present
+
+- name: bundle symlink
+  become: true
+  file:
+    src: ~/.gem/ruby/2.4.0/bin/bundle
+    dest: /usr/local/bin/bundle
+    state: link
+
+- name: bundler symlink
+  become: true
+  file:
+    src: ~/.gem/ruby/2.4.0/bin/bundler
+    dest: /usr/local/bin/bundler
+    state: link

@@ -10,13 +10,6 @@
       "export_path": "out/base-image.tar",
       "author": "danielcesargomes@gmail.com",
       "message": "base image {{timestamp}}"
-    },
-    {
-      "type": "virtualbox-ovf",
-      "source_path": "vagrant-base-box/box.ovf",
-      "ssh_username": "vagrant",
-      "ssh_password": "vagrant",
-      "vm_name": "base-image-{{timestamp}}"
     }
   ],
   "provisioners": [
@@ -26,24 +19,21 @@
     }
   ],
   "post-processors": [
-    {
-      "type": "vagrant",
-      "output": "out/base-image.box",
-      "only": ["virtualbox-ovf"]
-    },
     [
       {
         "type": "docker-import",
-        "repository": "dcsg/base-image",
-        "tag": "0.1",
-        "only": ["docker"]
+        "repository": "dcsg/pixels-base"
+      },
+      {
+        "type": "docker-tag",
+        "repository": "dcsg/pixels-base",
+        "tag": "0.1"
       },
       {
         "type": "docker-push",
         "login": true,
         "login_username": "{{user `docker_hub_user`}}",
-        "login_password": "{{user `docker_hub_password`}}",
-        "only": ["docker"]
+        "login_password": "{{user `docker_hub_password`}}"
       }
     ]
   ]

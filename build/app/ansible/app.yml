@@ -1,6 +1,4 @@
 ---
 - hosts: all
-  become: yes
   roles:
-    - ruby
     - app

@@ -1,6 +1,0 @@
----
-- name: restart app
-  service:
-    name: app
-    state: restarted
-  listen: "restart web services"
